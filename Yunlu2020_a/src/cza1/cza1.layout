@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<FileVersion major="1" minor="0" />
+	<ActiveTarget name="Debug" />
+	<File name="../bhv_basic_move.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="46" />
+		</Cursor>
+	</File>
+	<File name="../../../librcsc_CSU_Yunlu/rcsc/action/bhv_shoot2008.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2260" topLine="72" />
+		</Cursor>
+	</File>
+	<File name="../bhv_attackers_move.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1174" topLine="21" />
+		</Cursor>
+	</File>
+	<File name="../strategy.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1230" topLine="31" />
+		</Cursor>
+	</File>
+	<File name="../../../librcsc_CSU_Yunlu/rcsc/action/bhv_go_to_point_look_ball.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1665" topLine="43" />
+		</Cursor>
+	</File>
+	<File name="../role_center_back.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="60" />
+		</Cursor>
+	</File>
+	<File name="../bhv_penalty_kick.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1008" topLine="24" />
+		</Cursor>
+	</File>
+	<File name="../bhv_penalty_kick.cpp" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="21395" topLine="699" />
+		</Cursor>
+	</File>
+	<File name="../sample_player.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="9694" topLine="282" />
+		</Cursor>
+	</File>
+	<File name="../strategy.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="17302" topLine="634" />
+		</Cursor>
+	</File>
+	<File name="../../../librcsc_CSU_Yunlu/rcsc/action/bhv_shoot2008.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6773" topLine="175" />
+		</Cursor>
+	</File>
+	<File name="../role_center_forward.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3412" topLine="108" />
+		</Cursor>
+	</File>
+	<File name="../../../librcsc_CSU_Yunlu/rcsc/player/self_object.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="32151" topLine="1057" />
+		</Cursor>
+	</File>
+	<File name="../bhv_goalie_free_kick.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1891" topLine="44" />
+		</Cursor>
+	</File>
+	<File name="../../../librcsc_CSU_Yunlu/rcsc/action/body_dribble2008.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2945" topLine="98" />
+		</Cursor>
+	</File>
+	<File name="../bhv_attackers_move.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1748" topLine="24" />
+		</Cursor>
+	</File>
+</CodeBlocks_layout_file>
