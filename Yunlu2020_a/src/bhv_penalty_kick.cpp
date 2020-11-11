@@ -64,7 +64,16 @@ using namespace rcsc;
 
 /*-------------------------------------------------------------------*/
 /*!
+    点球大战文件
+    1.doonekickshoot中参数可调
+    2.doshoot中SmartKick不理解
+    3.添加了注释
 
+
+    1.点球共有七个阶段，分别为PenaltySetup_、PenaltyReady_、PenaltyTaken_、PenaltyScore_、PenaltyMiss_、PenaltyOnfield_、PenaltyFoul_
+    2.其中重要的四个阶段分别为PenaltySetup_、PenaltyReady_、PenaltyTaken_、PenaltyMiss_前三个阶段都需要区分是我方kick还是对方kick，并对其进行相应处理
+    3.踢球关键函数：doKicker、doShoot、doOneKickShoot、getShootTarget
+    4.防守关键函数：doGoalie、doGoalieBasicMove、doGoalieSlideChase
  */
 bool
 Bhv_PenaltyKick::execute( PlayerAgent * agent )
@@ -159,7 +168,7 @@ Bhv_PenaltyKick::execute( PlayerAgent * agent )
 
 /*-------------------------------------------------------------------*/
 /*!
-
+    kick移动到等待位置
  */
 bool
 Bhv_PenaltyKick::doKickerWait( PlayerAgent * agent )
@@ -169,16 +178,17 @@ Bhv_PenaltyKick::doKickerWait( PlayerAgent * agent )
     //Vector2D wait_pos(1, 6.5, 15.0 * myid);
     //Vector2D wait_pos(1, 5.5, 90.0 + (180.0 / 12.0) * agent->world().self().unum());
     double dist_step = ( 9.0 + 9.0 ) / 12;
+    //等待的位置
     Vector2D wait_pos( -2.0, -9.8 + dist_step * agent->world().self().unum() );
 
-    // already there
+    //已经到达等待位置
     if ( agent->world().self().pos().dist( wait_pos ) < 0.7 )
     {
         Bhv_NeckBodyToBall().execute( agent );
     }
     else
     {
-        // no dodge
+        //向等待位置移动
         Body_GoToPoint( wait_pos,
                         0.3,
                         ServerParam::i().maxDashPower()
@@ -245,18 +255,21 @@ Bhv_PenaltyKick::doKickerWait( PlayerAgent * agent )
 
 /*-------------------------------------------------------------------*/
 /*!
-
+    kicker准备
  */
 bool
 Bhv_PenaltyKick::doKickerSetup( PlayerAgent * agent )
 {
+    //从自己指向敌方球门的向量
     const Vector2D goal_c = ServerParam::i().theirTeamGoalPos();
+    //获取敌方守门员
     const PlayerObject * opp_goalie = agent->world().getOpponentGoalie();
     AngleDeg place_angle = 0.0;
 
-    // ball is close enoughly.
+    //球已经足够近了
     if ( ! Bhv_GoToStaticBall( place_angle ).execute( agent ) )
     {
+        //转向球门
         Body_TurnToPoint( goal_c ).execute( agent );
         if ( opp_goalie )
         {
@@ -273,7 +286,7 @@ Bhv_PenaltyKick::doKickerSetup( PlayerAgent * agent )
 
 /*-------------------------------------------------------------------*/
 /*!
-
+    当体力恢复到一定值时踢球
  */
 bool
 Bhv_PenaltyKick::doKickerReady( PlayerAgent * agent )
@@ -281,7 +294,7 @@ Bhv_PenaltyKick::doKickerReady( PlayerAgent * agent )
     const WorldModel & wm = agent->world();
     const PenaltyKickState * state = wm.penaltyKickState();
 
-    // stamina recovering...
+    // 体力恢复中
     if ( wm.self().stamina() < ServerParam::i().staminaMax() - 10.0
          && ( wm.time().cycle() - state->time().cycle() > ServerParam::i().penReadyWait() - 3 ) )
     {
@@ -298,13 +311,13 @@ Bhv_PenaltyKick::doKickerReady( PlayerAgent * agent )
 
 /*-------------------------------------------------------------------*/
 /*!
-
+    Kicker执行各种操作
  */
 bool
 Bhv_PenaltyKick::doKicker( PlayerAgent * agent )
 {
     //
-    // server does NOT allow multiple kicks
+    // 服务器不允许多次踢球
     //
 
     if ( ! ServerParam::i().penAllowMultKicks() )
@@ -318,9 +331,10 @@ Bhv_PenaltyKick::doKicker( PlayerAgent * agent )
 
     const WorldModel & wm = agent->world();
 
-    // get ball
+    // 拿球
     if ( ! wm.self().isKickable() )
     {
+        //移动到踢球点
         if ( ! Body_Intercept().execute( agent ) )
         {
             Body_GoToPoint( wm.ball().pos(),
@@ -329,13 +343,16 @@ Bhv_PenaltyKick::doKicker( PlayerAgent * agent )
                             ).execute( agent );
         }
 
+        //转向球
         if ( wm.ball().posCount() > 0 )
         {
             agent->setNeckAction( new Neck_TurnToBall() );
         }
         else
         {
+            //获取敌方守门员
             const PlayerObject * opp_goalie = agent->world().getOpponentGoalie();
+            //转向敌方守门员
             if ( opp_goalie )
             {
                 agent->setNeckAction( new Neck_TurnToPoint( opp_goalie->pos() ) );
@@ -349,31 +366,32 @@ Bhv_PenaltyKick::doKicker( PlayerAgent * agent )
         return true;
     }
 
-    // kick decision
+    // 执行射门
     if ( doShoot( agent ) )
     {
         return true;
     }
-
+    //执行带球
     return doDribble( agent );
 }
 
 /*-------------------------------------------------------------------*/
 /*!
-
+    只能触碰一次？
  */
 bool
 Bhv_PenaltyKick::doOneKickShoot( PlayerAgent* agent )
 {
+    // 获取球速
     const double ball_speed = agent->world().ball().vel().r();
-    // ball is moveng --> kick has taken.
+    // 已经踢了球
     if ( ! ServerParam::i().penAllowMultKicks()
          && ball_speed > 0.3 )
     {
         return false;
     }
 
-    // go to the ball side
+    // 移动到球的一侧
     if ( ! agent->world().self().isKickable() )
     {
         Body_GoToPoint( agent->world().ball().pos(),
@@ -384,7 +402,7 @@ Bhv_PenaltyKick::doOneKickShoot( PlayerAgent* agent )
         return true;
     }
 
-    // turn to the ball to get the maximal kick rate.
+    // 转向球获取最大力度
     if ( ( agent->world().ball().angleFromSelf() - agent->world().self().body() ).abs()
          > 3.0 )
     {
@@ -402,12 +420,13 @@ Bhv_PenaltyKick::doOneKickShoot( PlayerAgent* agent )
         return true;
     }
 
-    // decide shot target point
+    // 决定目标点
     Vector2D shoot_point = ServerParam::i().theirTeamGoalPos();
-
+    //获取敌方守门员
     const PlayerObject * opp_goalie = agent->world().getOpponentGoalie();
     if ( opp_goalie )
     {
+        //这里的参数可以调整
         shoot_point.y = ServerParam::i().goalHalfWidth() - 1.0;
         if ( opp_goalie->pos().absY() > 0.5 )
         {
@@ -425,7 +444,7 @@ Bhv_PenaltyKick::doOneKickShoot( PlayerAgent* agent )
         }
     }
 
-    // enforce one step kick
+    // 执行踢球
     Body_KickOneStep( shoot_point,
                       ServerParam::i().ballSpeedMax()
                       ).execute( agent );
@@ -435,7 +454,7 @@ Bhv_PenaltyKick::doOneKickShoot( PlayerAgent* agent )
 
 /*-------------------------------------------------------------------*/
 /*!
-
+    执行踢球的函数
  */
 
 bool
@@ -443,7 +462,7 @@ Bhv_PenaltyKick::doShoot( PlayerAgent * agent )
 {
     const WorldModel & wm = agent->world();
     const PenaltyKickState * state = wm.penaltyKickState();
-
+    //时间即将耗尽，强制踢球
     if ( wm.time().cycle() - state->time().cycle() > ServerParam::i().penTakenWait() - 25 )
     {
         dlog.addText( Logger::TEAM,
@@ -457,7 +476,7 @@ Bhv_PenaltyKick::doShoot( PlayerAgent * agent )
 
     Vector2D shot_point;
     double shot_speed;
-
+    //智能选择踢球点？
     if ( getShootTarget( agent, &shot_point, &shot_speed ) )
     {
         dlog.addText( Logger::TEAM,
@@ -478,7 +497,7 @@ Bhv_PenaltyKick::doShoot( PlayerAgent * agent )
 
 /*-------------------------------------------------------------------*/
 /*!
-
+    获取射门的目标点
  */
 bool
 Bhv_PenaltyKick::getShootTarget( const PlayerAgent * agent,
@@ -488,6 +507,7 @@ Bhv_PenaltyKick::getShootTarget( const PlayerAgent * agent,
     const WorldModel & wm = agent->world();
     const ServerParam & SP = ServerParam::i();
 
+    // 球离地方门将的距离大于1600
     if ( SP.theirTeamGoalPos().dist2( wm.ball().pos() ) > std::pow( 40.0, 2 ) )
     {
         dlog.addText( Logger::TEAM,
@@ -496,6 +516,7 @@ Bhv_PenaltyKick::getShootTarget( const PlayerAgent * agent,
         return false;
     }
 
+    //敌方守门员
     const PlayerObject * opp_goalie = wm.getOpponentGoalie();
 
     // goalie is not found.
@@ -511,26 +532,37 @@ Bhv_PenaltyKick::getShootTarget( const PlayerAgent * agent,
     }*/
     /*------------------------*/
 
+    //两个射球方向
     Vector2D shot_l( SP.pitchHalfLength(), -SP.goalHalfWidth() + 1.5 );
     Vector2D shot_r( SP.pitchHalfLength(), +SP.goalHalfWidth() - 1.5 );
     Vector2D ball_p = wm.ball().pos();
 
+    //射球方向的直线
     Line2D ball2goal_l( ball_p, shot_l);
     Line2D ball2goal_r( ball_p, shot_r);
 
+    //球到goal_l的距离
     double goalie2shootline_l = ball2goal_l.dist(opp_goalie->pos());
+    //自身到敌方守门员的距离
     double goalie2self = agent->world().self().pos().dist(opp_goalie->pos());
+    //距离差的平方
     double cycle_l = sqrt(pow(goalie2self,2) - pow(goalie2shootline_l,2))/1.0;
 
+    //球到goal_r的距离
     double goalie2shootline_r = ball2goal_r.dist(opp_goalie->pos());
     double cycle_r = sqrt(pow(goalie2self,2) - pow(goalie2shootline_r,2))/1.0;
 
+    //计算两个方向是否安全
     bool l_safe = ball2goal_l.dist(opp_goalie->pos() ) -1.05 * cycle_l - SP.catchableArea() > 1.0;
     bool r_safe = ball2goal_r.dist(opp_goalie->pos() ) -1.05 * cycle_r - SP.catchableArea() > 1.0;
+    
+    //自身与敌方守门员的距离，默认值200
     const double goalie_dist = ( opp_goalie
                                  ? ( opp_goalie->pos().dist( wm.self().pos() ) )
                                  : 200.0 );
     std::cerr << "l_safe:" << l_safe << "\t" << "r_safe:" << r_safe << std::endl;
+
+    //根据情况选择射球方向
     if ( !l_safe && !r_safe )
         return false;
 
@@ -540,6 +572,7 @@ Bhv_PenaltyKick::getShootTarget( const PlayerAgent * agent,
     if ( r_safe && !l_safe)
         *point = shot_r;
 
+    //如果两个方向都安全，则根据自身的朝向来决定射球方向
     if ( l_safe && r_safe )
     {
         //if ( wm.self().pos().y > 0 )
@@ -566,7 +599,7 @@ Bhv_PenaltyKick::getShootTarget( const PlayerAgent * agent,
 
 /*-------------------------------------------------------------------*/
 /*!
-  dribble to the shootable point
+  带球到能够射门的位置
 */
 
 bool
@@ -597,7 +630,7 @@ Bhv_PenaltyKick::doDribble( PlayerAgent * agent )
 
 
     /////////////////////////////////////////////////
-    // dribble parametors
+    // 带球的参数
 
     const double base_target_abs_y = ServerParam::i().goalHalfWidth() + 4.0;
     Vector2D drib_target = goal_c;
@@ -606,8 +639,7 @@ Bhv_PenaltyKick::doDribble( PlayerAgent * agent )
 
     /////////////////////////////////////////////////
 
-    // it's too far to the goal.
-    // dribble to the shootable area
+    // 离敌方球门太远则带球至能够射门的位置
     if ( my_abs_x < penalty_abs_x - 3.0
          && goalie_dist > 10.0 )
     {
@@ -976,7 +1008,7 @@ Bhv_PenaltyKick::doGoalieSetup( PlayerAgent * agent )
 
 /*-------------------------------------------------------------------*/
 /*!
-
+    守门员的动作
  */
 bool
 Bhv_PenaltyKick::doGoalie( PlayerAgent* agent )
@@ -985,7 +1017,7 @@ Bhv_PenaltyKick::doGoalie( PlayerAgent* agent )
     const WorldModel & wm = agent->world();
 
     ///////////////////////////////////////////////
-    // check if catchabale
+    // 判断是否能扑到球
     Rect2D our_penalty( Vector2D( -SP.pitchHalfLength(),
                                   -SP.penaltyAreaHalfWidth() + 1.0 ),
                         Size2D( SP.penaltyAreaLength() - 1.0,
@@ -998,7 +1030,7 @@ Bhv_PenaltyKick::doGoalie( PlayerAgent* agent )
                       __FILE__": goalie try to catch" );
         return agent->doCatch();
     }
-
+    //如果能踢球，则将球踢出
     if ( wm.self().isKickable() )
     {
         Body_ClearBall().execute( agent );
@@ -1007,10 +1039,10 @@ Bhv_PenaltyKick::doGoalie( PlayerAgent* agent )
     }
 
     ///////////////////////////////////////////////
-    // if taker can only one kick, goalie should stay the front of goal.
+    // 如果敌方只能踢球一次，我方守门员就必须待在门前
     if ( ! SP.penAllowMultKicks() )
     {
-        // kick has not been taken.
+        // 还没有踢球的话
         if ( wm.ball().vel().r2() < 0.01
              && wm.ball().pos().absX() < SP.pitchHalfLength() - SP.penDistX() - 1.0 )
         {
@@ -1019,16 +1051,17 @@ Bhv_PenaltyKick::doGoalie( PlayerAgent* agent )
 
         if ( wm.ball().vel().r2() > 0.01 )
         {
+            //球速较大，尝试铲球
             return doGoalieSlideChase( agent );
         }
     }
-
+    //守门员基本移动
     return doGoalieBasicMove( agent );
 }
 
 /*-------------------------------------------------------------------*/
 /*!
-
+    守门员的基本移动函数
  */
 bool
 Bhv_PenaltyKick::doGoalieBasicMove( PlayerAgent * agent )
@@ -1045,7 +1078,7 @@ Bhv_PenaltyKick::doGoalieBasicMove( PlayerAgent * agent )
                   __FILE__": goalieBasicMove. " );
 
     ////////////////////////////////////////////////////////////////////////
-    // get active interception catch point
+    // 获得主动拦截点
     const int self_min = wm.interceptTable()->selfReachCycle();
     Vector2D move_pos = wm.ball().inertiaPoint( self_min );
   /*  ------  add by ybh -------*/
@@ -1063,7 +1096,8 @@ if( move_pos.dist(wm.self().pos()) < 4.0)
 }
 /*----------------------------------------*/
    if ( our_penalty.contains( move_pos ) )
-    {std::cerr<<wm.time().cycle()<<__FILE__<<"into penalty\n";
+    {
+        std::cerr<<wm.time().cycle()<<__FILE__<<"into penalty\n";
         dlog.addText( Logger::TEAM,
                       __FILE__": goalieBasicMove. exist intercept point " );
         agent->debugClient().addMessage( "ExistIntPoint" );
@@ -1076,7 +1110,8 @@ if( move_pos.dist(wm.self().pos()) < 4.0)
             {
 
                 Vector2D target_point ;
-
+                //根据y值来进行移动
+                //TODO:守门员移动参数可以在这里修改
                 if(wm.ball().pos().absY() > 16.0)
                 {
                       std::cerr << wm.time().cycle() << __FILE__ << ": go out\n";
@@ -1119,6 +1154,7 @@ if( move_pos.dist(wm.self().pos()) < 4.0)
 
     Vector2D my_pos = wm.self().pos();
     Vector2D ball_pos;
+    //重新计算球的位置
     if ( wm.existKickableOpponent() )
     {
         ball_pos = wm.opponentsFromBall().front()->pos();
@@ -1132,6 +1168,7 @@ if( move_pos.dist(wm.self().pos()) < 4.0)
                                          SP.ballDecay() );
     }
 
+    //获取应该移动到的位置
     move_pos = getGoalieMovePos( ball_pos, my_pos );
   /*  ------  add by ybh -------*/
     move_pos.x = move_pos.x - 0.8;
@@ -1151,7 +1188,7 @@ if( move_pos.dist(wm.self().pos()) < 4.0)
                            SP.maxDashPower()
                            ).execute( agent ) )
     {std::cerr << wm.time().cycle() << __FILE__ << ": do backmove\n";
-        // already there
+        // 已经到达目标点
         AngleDeg face_angle = wm.ball().angleFromSelf();
         if ( wm.ball().angleFromSelf().isLeftOf( wm.self().body() ) )
         {
@@ -1311,7 +1348,7 @@ bool
 Bhv_PenaltyKick::doGoalieSlideChase( PlayerAgent* agent )
 {
     const WorldModel & wm = agent->world();
-
+    //还没有转到目标方向
     if ( std::fabs( 90.0 - wm.self().body().abs() ) > 2.0 )
     {
         Vector2D face_point( wm.self().pos().x, 100.0);
@@ -1323,12 +1360,15 @@ Bhv_PenaltyKick::doGoalieSlideChase( PlayerAgent* agent )
         agent->setNeckAction( new Neck_TurnToBall() );
         return true;
     }
-
+    //球的运动轨迹
     Ray2D ball_ray( wm.ball().pos(), wm.ball().vel().th() );
+    //球运动轨迹的直线
     Line2D ball_line( ball_ray.origin(), ball_ray.dir() );
+    //我自身朝向的直线
     Line2D my_line( wm.self().pos(), wm.self().body() );
 
     Vector2D intersection = my_line.intersection( ball_line );
+    //没有交点
     if ( ! intersection.isValid()
          || ! ball_ray.inRightDir( intersection ) )
     {
@@ -1336,7 +1376,7 @@ Bhv_PenaltyKick::doGoalieSlideChase( PlayerAgent* agent )
         agent->setNeckAction( new Neck_TurnToBall() );
         return true;
     }
-
+    //交点离自身的距离可以扑球
     if ( wm.self().pos().dist( intersection )
          < ServerParam::i().catchAreaLength() * 0.7 )
     {
@@ -1344,7 +1384,7 @@ Bhv_PenaltyKick::doGoalieSlideChase( PlayerAgent* agent )
         agent->setNeckAction( new Neck_TurnToBall() );
         return true;
     }
-
+    //扑球
     AngleDeg angle = ( intersection - wm.self().pos() ).th();
     double dash_power = ServerParam::i().maxDashPower();
     if ( ( angle - wm.self().body() ).abs() > 90.0 )
