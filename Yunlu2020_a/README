@@ -47,5 +47,3 @@ agent2dのチームを起動するには，srcディレクトリ内で以下のコマンドをタイ
 プします．
 
 `./start.sh'
-
-add a new line to readme

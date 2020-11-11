@@ -558,7 +558,7 @@ std::cerr << wm.time().cycle() << __FILE__ << wm.self().unum() << ": (Bhv_ChainA
 
     dlog.addText( Logger::TEAM,
                   __FILE__": (doTurnToFoward) register intention" );
-    agent->setIntention( new IntentionTqurnTo( face_point ) );
+    agent->setIntention( new IntentionTurnTo( face_point ) );
 
     return true;
 }
