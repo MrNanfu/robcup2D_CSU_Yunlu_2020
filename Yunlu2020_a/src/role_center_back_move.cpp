@@ -91,24 +91,24 @@ rolecenterbackmove::doBasicMove(PlayerAgent * agent,
     int intercept_state = 0;
     if (self_min <= 1 && opp_min >= 1)
     {
-      intercept_state = 1;
+      intercept_state = 3;
     }
     else if (self_min <= 2 && opp_min >= 3)
     {
-      intercept_state = 2;
+      intercept_state = 4;
     }
     else if (self_min <= 3 && opp_min >= 4)
     {
-      intercept_state = 3;
+      intercept_state = 5;
     }
     else if (self_min < 20 && self_min < mate_min
         && (self_min <= opp_min - 1 && opp_min >= 2))
     {
-      intercept_state = 4;
+      intercept_state = 6;
     }
     else if (opp_min >= 2 && self_min <= opp_min + 1 && self_min <= mate_min)
     {
-      intercept_state = 5;
+      intercept_state = 7;
     }
 
     Vector2D selfInterceptPoint = wm.ball().inertiaPoint(self_min);
@@ -179,7 +179,7 @@ rolecenterbackmove::doBasicMove(PlayerAgent * agent,
 
   if (wm.ball().pos().x < -35.0)
   {
-    if (wm.self().stamina() > ServerParam::i().staminaMax() * 0.6
+    if (wm.self().stamina() > ServerParam::i().staminaMax() * 0.5
         && wm.self().pos().x < target_point.x - 4.0
         && wm.self().pos().dist(target_point) > dist_thr)
     {
@@ -1647,11 +1647,11 @@ rolecenterbackmove::get_dash_power(const rcsc::PlayerAgent * agent,
 
   const rcsc::WorldModel & wm = agent->world();
 
-  if (wm.self().stamina() < rcsc::ServerParam::i().staminaMax() * 0.5)
+  if (wm.self().stamina() < rcsc::ServerParam::i().staminaMax() * 0.45)
   {  //cout<<"1172hang";     //shuchu
     S_recover_mode = true;
   }
-  else if (wm.self().stamina() > rcsc::ServerParam::i().staminaMax() * 0.85)
+  else if (wm.self().stamina() > rcsc::ServerParam::i().staminaMax() * 0.7)
   { //cout<<"1176hang";   //shuchu
     S_recover_mode = false;
   }
@@ -1665,7 +1665,7 @@ rolecenterbackmove::get_dash_power(const rcsc::PlayerAgent * agent,
 
   double dash_power;
 
-  if((wm.ourDefenseLineX()+2 > wm.ball().pos().x ||
+  if((wm.ourDefenseLineX()+3 > wm.ball().pos().x ||
         		Strategy::get_ball_area(wm.ball().pos()) == Strategy::BA_Danger)
         		&& !wm.existKickableTeammate())                                                         //add
                 	  return ServerParam::i().maxPower();
@@ -1691,7 +1691,7 @@ rolecenterbackmove::get_dash_power(const rcsc::PlayerAgent * agent,
     else if (ball_xdiff < 10.0)
     {
       dash_power = rcsc::ServerParam::i().maxPower();
-      dash_power *= 0.7;
+      dash_power *= 0.8;
       //dash_power
       //    = mytype.getDashPowerToKeepSpeed( 0.7, wm.self().effort() );
     }
@@ -1760,7 +1760,7 @@ rolecenterbackmove::get_dash_power(const rcsc::PlayerAgent * agent,
     rcsc::dlog.addText(rcsc::Logger::TEAM,
         __FILE__": get_dash_power. correct dash power to save stamina(2)");
     dash_power = rcsc::ServerParam::i().maxPower();
-    dash_power *= 0.6;
+    dash_power *= 0.8;
     //dash_power = mytype.getDashPowerToKeepSpeed( 0.6, wm.self().effort() );
   }
   else if (ball_xdiff > 5.0)
@@ -1768,7 +1768,7 @@ rolecenterbackmove::get_dash_power(const rcsc::PlayerAgent * agent,
     rcsc::dlog.addText(rcsc::Logger::TEAM,
         __FILE__": get_dash_power. correct dash power to save stamina(3)");
     dash_power = rcsc::ServerParam::i().maxPower();
-    dash_power *= 0.85;
+    dash_power *= 0.95;
     //dash_power = mytype.getDashPowerToKeepSpeed( 0.85, wm.self().effort() );
   }
   else
